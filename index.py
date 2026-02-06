@@ -219,4 +219,5 @@
     window.onload = renderRecibos;
 </script>
 </body>
+
 </html>
