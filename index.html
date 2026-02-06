@@ -21,7 +21,7 @@
             box-sizing: border-box; font-size: 14px; transition: border 0.3s;
         }
         input:focus, textarea:focus { border-color: #000; outline: none; }
-        input:disabled { background-color: #eee; color: #888; }
+        input:disabled { background-color: #eee; color: #888; cursor: not-allowed; }
         
         button.btn-print { 
             background: #111; color: #fff; border: none; padding: 15px; cursor: pointer; 
@@ -50,7 +50,8 @@
         /* Contenedor de Opciones Avanzadas */
         #seccion-avanzada {
             margin-top: 20px; background: #f8f9fa; padding: 20px; 
-            border-radius: 8px; border: 1px solid #e0e0e0; display: none; /* OCULTO POR DEFECTO */
+            border-radius: 8px; border: 1px solid #e0e0e0; 
+            display: none; /* OCULTO POR DEFECTO ESTRICTO */
         }
 
         #print-area { display: flex; flex-direction: column; align-items: center; }
@@ -96,29 +97,29 @@
 
 <div id="ui-panel">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 style="margin:0;">Generador NRG - v5.1 Final</h3>
+        <h3 style="margin:0;">Generador NRG - v5.2</h3>
     </div>
 
     <div class="input-row">
         <div><label>Empresa:</label>
-            <select id="emp" onchange="renderRecibos()">
+            <select id="emp" onchange="renderRecibos()" autocomplete="off">
                 <option value="solar">NRG Solar</option>
                 <option value="ing">NRG Ingeniería</option>
                 <option value="mont">NRG Montajes & Maquinaria</option>
             </select>
         </div>
         <div><label>Copias:</label>
-            <select id="cantidad" onchange="controlarVisibilidadAvanzada()">
-                <option value="1">1 Recibo</option>
+            <select id="cantidad" onchange="controlarVisibilidadAvanzada()" autocomplete="off">
+                <option value="1" selected>1 Recibo</option>
                 <option value="2">2 Recibos (1 hoja)</option>
                 <option value="4">4 Recibos (2 hojas)</option>
             </select>
         </div>
         <div>
             <label>Fecha:</label>
-            <input type="text" id="iF" oninput="sync()" placeholder="DD/MM/AAAA">
+            <input type="text" id="iF" oninput="sync()" placeholder="DD/MM/AAAA" autocomplete="off">
             <div class="check-container" onclick="document.getElementById('checkFecha').click()">
-                <input type="checkbox" id="checkFecha" onchange="toggleFechaHoy(event)"> 
+                <input type="checkbox" id="checkFecha" onchange="toggleFechaHoy(event)" autocomplete="off"> 
                 <span class="check-text">Usar fecha de hoy</span>
             </div>
         </div>
@@ -127,7 +128,7 @@
     <div id="seccion-avanzada" style="display: none;">
         <div style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
             <div class="check-container" onclick="document.getElementById('checkIndividual').click()">
-                <input type="checkbox" id="checkIndividual" onchange="actualizarInterfazIndividual()">
+                <input type="checkbox" id="checkIndividual" onchange="actualizarInterfazIndividual()" autocomplete="off">
                 <span class="check-text" style="font-size:14px;">Activar datos diferentes para cada recibo</span>
             </div>
         </div>
@@ -377,8 +378,9 @@
         }
     }
 
-    // Inicializar
+    // Inicializar: Asegurar que se oculte al cargar si está en 1
     window.onload = function() {
+        document.getElementById('cantidad').value = "1"; // Forzar valor visual
         controlarVisibilidadAvanzada();
     };
 </script>
