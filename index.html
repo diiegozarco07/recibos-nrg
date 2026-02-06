@@ -15,6 +15,18 @@
         input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { background: #000; color: #fff; border: none; padding: 12px; cursor: pointer; width: 100%; font-weight: bold; border-radius: 4px; margin-top: 10px; }
         
+        /* Botón chiquito para la fecha */
+        .btn-mini { 
+            background: #444; color: #fff; padding: 2px 8px; font-size: 11px; 
+            border-radius: 3px; cursor: pointer; margin-left: 5px; border: none; 
+            display: inline-block; vertical-align: middle;
+        }
+
+        /* Estilo para items individuales */
+        .individual-item { margin-bottom: 15px; border-left: 4px solid #333; padding-left: 15px; background: #fff; padding: 10px; border-radius: 0 5px 5px 0; }
+        .individual-header { font-size: 12px; font-weight: bold; color: #444; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 3px; display: block;}
+        .grid-individual { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-bottom: 5px; }
+
         #print-area { display: flex; flex-direction: column; align-items: center; }
 
         /* Estructura del Recibo */
@@ -24,24 +36,14 @@
             position: relative; overflow: hidden;
         }
 
-        /* Línea de recorte con tijeras */
-        .recibo-unit:nth-child(odd):not(:last-child) {
-            border-bottom: 2px dashed #aaa;
-        }
-        
+        /* Línea de recorte */
+        .recibo-unit:nth-child(odd):not(:last-child) { border-bottom: 2px dashed #aaa; }
         .recibo-unit:nth-child(odd):not(:last-child)::after {
             content: '✂-------------------------------------------------------------------------------------------------';
-            position: absolute;
-            bottom: -10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #aaa;
-            font-size: 14px;
-            letter-spacing: 2px;
+            position: absolute; bottom: -10px; left: 0; width: 100%; text-align: center; color: #aaa; font-size: 14px; letter-spacing: 2px;
         }
 
-        /* Salto de página cada 2 unidades */
+        /* Salto de página */
         .recibo-unit:nth-child(even) { page-break-after: always; }
 
         .header { width: 100%; margin-bottom: 10px; }
@@ -67,7 +69,7 @@
 <body>
 
 <div id="ui-panel">
-    <h3 style="margin-top:0;">Generador NRG - Web 24/7</h3>
+    <h3 style="margin-top:0;">Generador NRG - Full Control</h3>
     <div class="input-row">
         <div><label>Empresa:</label>
             <select id="emp" onchange="renderRecibos()">
@@ -77,37 +79,44 @@
             </select>
         </div>
         <div><label>Copias:</label>
-            <select id="cantidad" onchange="renderRecibos()">
+            <select id="cantidad" onchange="actualizarInterfazIndividual()">
                 <option value="1">1 Recibo</option>
                 <option value="2">2 Recibos (1 hoja)</option>
                 <option value="4">4 Recibos (2 hojas)</option>
             </select>
         </div>
-        <div><label>Fecha:</label><input type="text" id="iF" oninput="sync()"></div>
+        <div>
+            <label>Fecha: <button class="btn-mini" onclick="ponerFechaHoy()">HOY</button></label>
+            <input type="text" id="iF" oninput="sync()">
+        </div>
     </div>
     <div class="input-row">
-        <div style="grid-column: span 2;"><label>Nombre Cliente:</label><input type="text" id="iN" oninput="sync()"></div>
-        <div><label>Monto $ (Número):</label><input type="number" id="iM" step="0.01" oninput="convertirMonto(); sync();"></div>
+        <div style="grid-column: span 3;"><label>Nombre Cliente (General):</label><input type="text" id="iN" oninput="sync()"></div>
     </div>
-    <div style="margin-top:10px;">
-        <label>Por concepto de:</label>
-        <textarea id="iC" oninput="sync()" style="height: 40px;"></textarea>
+    
+    <div style="margin-top:15px; background: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+        <div style="margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+            <label style="display:inline-flex; align-items:center; cursor:pointer; font-size: 14px;">
+                <input type="checkbox" id="checkIndividual" onchange="actualizarInterfazIndividual()" style="width:auto; margin-right:8px; transform: scale(1.2);">
+                <strong>Activar datos diferentes para cada recibo (Monto y Concepto)</strong>
+            </label>
+        </div>
+        
+        <div id="contenedor-dinamico">
+            </div>
     </div>
-    <div style="margin-top:10px;">
-        <label>Cantidad con Letra:</label>
-        <input type="text" id="iL" oninput="sync()">
-    </div>
+
     <button onclick="window.print()">IMPRIMIR RECIBOS</button>
 </div>
 
 <div id="print-area"></div>
 
 <script>
-    // AQUI SOLO PONEMOS LOS NOMBRES DE LOS ARCHIVOS QUE SUBIRAS A GITHUB
+    // --- CONFIGURACIÓN DE IMÁGENES (GITHUB) ---
     const logos = {
-        solar: 'solar.png',       // Asegúrate que tu archivo se llame así
-        ing: 'ingenieria.png',    // Asegúrate que tu archivo se llame así
-        mont: 'montajes.png'      // Asegúrate que tu archivo se llame así
+        solar: 'solar.png',       
+        ing: 'ingenieria.png',    
+        mont: 'montajes.jpeg'      
     };
 
     const nombresEmpresa = {
@@ -116,6 +125,60 @@
         mont: 'MONTAJES. '
     };
 
+    // --- LÓGICA DE FECHA ---
+    function ponerFechaHoy() {
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const hoy = new Date();
+        const texto = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+        document.getElementById('iF').value = texto;
+        sync(); 
+    }
+
+    // --- LÓGICA DE INTERFAZ (GLOBAL VS INDIVIDUAL) ---
+    function actualizarInterfazIndividual() {
+        const cantidad = parseInt(document.getElementById('cantidad').value);
+        const esIndividual = document.getElementById('checkIndividual').checked;
+        const contenedor = document.getElementById('contenedor-dinamico');
+        
+        contenedor.innerHTML = ''; // Limpiar área
+
+        if (!esIndividual) {
+            // MODO GLOBAL (1 Monto y 1 Concepto para todos)
+            contenedor.innerHTML = `
+                <div class="input-row">
+                    <div><label>Monto $ (Global):</label><input type="number" id="iM_Global" step="0.01" oninput="convertirMontoGlobal(); sync();"></div>
+                    <div style="grid-column: span 2;"><label>Cantidad con Letra:</label><input type="text" id="iL_Global" oninput="sync()"></div>
+                </div>
+                <div><label>Concepto (Global):</label><textarea id="iC_Global" oninput="sync()" style="height: 45px;"></textarea></div>
+            `;
+        } else {
+            // MODO INDIVIDUAL (Campos por cada recibo)
+            for (let i = 0; i < cantidad; i++) {
+                contenedor.innerHTML += `
+                    <div class="individual-item">
+                        <span class="individual-header">Recibo #${i + 1}</span>
+                        <div class="grid-individual">
+                            <div>
+                                <label style="font-size:10px;">Monto $:</label>
+                                <input type="number" id="iM_${i}" step="0.01" oninput="convertirMontoIndividual(${i}); sync();">
+                            </div>
+                            <div>
+                                <label style="font-size:10px;">Cantidad con Letra (Auto):</label>
+                                <input type="text" id="iL_${i}" oninput="sync()">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:10px;">Concepto:</label>
+                            <textarea id="iC_${i}" oninput="sync()" style="height: 35px;"></textarea>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        renderRecibos(); 
+    }
+
+    // --- CONVERTIDOR DE NUMEROS ---
     function numeroALetras(num) {
         const unidades = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"];
         const decenas = ["DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISEIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"];
@@ -151,11 +214,19 @@
         return `${letras}PESOS ${decimal}/100 M.N.`.replace(/\s+/g, ' ');
     }
 
-    function convertirMonto() {
-        const monto = document.getElementById('iM').value;
-        if (monto) document.getElementById('iL').value = numeroALetras(monto);
+    // Convertir en Modo Global
+    function convertirMontoGlobal() {
+        const monto = document.getElementById('iM_Global').value;
+        if (monto) document.getElementById('iL_Global').value = numeroALetras(monto);
     }
 
+    // Convertir en Modo Individual (por índice)
+    function convertirMontoIndividual(idx) {
+        const monto = document.getElementById('iM_' + idx).value;
+        if (monto) document.getElementById('iL_' + idx).value = numeroALetras(monto);
+    }
+
+    // --- RENDERIZADO VISUAL ---
     function renderRecibos() {
         const cant = parseInt(document.getElementById('cantidad').value);
         const container = document.getElementById('print-area');
@@ -166,7 +237,7 @@
 
         for (let i = 0; i < cant; i++) {
             container.innerHTML += `
-                <div class="recibo-unit">
+                <div class="recibo-unit" id="recibo-${i}">
                     <table class="header" width="100%">
                         <tr>
                             <td class="logo-box">
@@ -202,22 +273,49 @@
     }
 
     function sync() {
+        // 1. Datos siempre comunes (Fecha y Nombre)
         const fields = {
             'oF': document.getElementById('iF').value,
-            'oN': document.getElementById('iN').value,
-            'oM': document.getElementById('iM').value,
-            'oC': document.getElementById('iC').value,
-            'oL': document.getElementById('iL').value
+            'oN': document.getElementById('iN').value
         };
         for (let key in fields) {
             const elements = document.getElementsByClassName(key);
             for (let el of elements) el.innerText = fields[key];
         }
+
+        // 2. Datos dependientes del modo (Monto, Letra, Concepto)
+        const esIndividual = document.getElementById('checkIndividual').checked;
+        const recibos = document.getElementsByClassName('recibo-unit');
+        
+        if (!esIndividual) {
+            // MODO GLOBAL: Copiar de los inputs _Global a TODOS
+            const m = document.getElementById('iM_Global').value;
+            const l = document.getElementById('iL_Global').value;
+            const c = document.getElementById('iC_Global').value;
+
+            for(let i=0; i < recibos.length; i++) {
+                recibos[i].querySelector('.oM').innerText = m;
+                recibos[i].querySelector('.oL').innerText = l;
+                recibos[i].querySelector('.oC').innerText = c;
+            }
+        } else {
+            // MODO INDIVIDUAL: Buscar iM_0, iL_0... y ponerlo en su recibo
+            for(let i=0; i < recibos.length; i++) {
+                const im = document.getElementById('iM_' + i);
+                const il = document.getElementById('iL_' + i);
+                const ic = document.getElementById('iC_' + i);
+                
+                if(im) recibos[i].querySelector('.oM').innerText = im.value;
+                if(il) recibos[i].querySelector('.oL').innerText = il.value;
+                if(ic) recibos[i].querySelector('.oC').innerText = ic.value;
+            }
+        }
     }
 
     // Inicializar
-    window.onload = renderRecibos;
+    window.onload = function() {
+        actualizarInterfazIndividual(); 
+    };
 </script>
 </body>
-
 </html>
