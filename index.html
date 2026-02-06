@@ -42,7 +42,7 @@
         }
         .grid-individual { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
 
-        /* Checkbox bonito */
+        /* Checkbox bonito (arreglado) */
         .check-container { display: flex; align-items: center; margin-top: 5px; }
         .check-container input { width: 18px; height: 18px; margin-right: 8px; cursor: pointer; accent-color: #000; }
         .check-text { font-size: 13px; font-weight: bold; color: #333; cursor: pointer; }
@@ -97,7 +97,7 @@
 
 <div id="ui-panel">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 style="margin:0;">Generador NRG - v5.2</h3>
+        <h3 style="margin:0;">Generador NRG - v5.3</h3>
     </div>
 
     <div class="input-row">
@@ -118,18 +118,18 @@
         <div>
             <label>Fecha:</label>
             <input type="text" id="iF" oninput="sync()" placeholder="DD/MM/AAAA" autocomplete="off">
-            <div class="check-container" onclick="document.getElementById('checkFecha').click()">
+            <div class="check-container">
                 <input type="checkbox" id="checkFecha" onchange="toggleFechaHoy(event)" autocomplete="off"> 
-                <span class="check-text">Usar fecha de hoy</span>
+                <label for="checkFecha" class="check-text">Usar fecha de hoy</label>
             </div>
         </div>
     </div>
     
     <div id="seccion-avanzada" style="display: none;">
         <div style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-            <div class="check-container" onclick="document.getElementById('checkIndividual').click()">
+            <div class="check-container">
                 <input type="checkbox" id="checkIndividual" onchange="actualizarInterfazIndividual()" autocomplete="off">
-                <span class="check-text" style="font-size:14px;">Activar datos diferentes para cada recibo</span>
+                <label for="checkIndividual" class="check-text" style="font-size:14px;">Activar datos diferentes para cada recibo</label>
             </div>
         </div>
         <div id="contenedor-dinamico"></div>
@@ -139,6 +139,11 @@
         <div class="input-row">
             <div style="grid-column: span 3;"><label>Nombre Cliente (Global):</label><input type="text" id="iN_Global" oninput="sync()"></div>
         </div>
+        <div class="input-row">
+            <div><label>RFC Cliente:</label><input type="text" id="iRFC_Global" oninput="sync()" placeholder="N/A por defecto"></div>
+            <div style="grid-column: span 2;"><label>Asesor Comercial:</label><input type="text" id="iAsesor_Global" oninput="sync()" placeholder="N/A por defecto"></div>
+        </div>
+
         <div class="input-row">
             <div><label>Monto $ (Global):</label><input type="number" id="iM_Global" step="0.01" oninput="convertirMontoGlobal(); sync();"></div>
             <div style="grid-column: span 2;"><label>Cantidad con Letra:</label><input type="text" id="iL_Global" oninput="sync()"></div>
@@ -224,11 +229,15 @@
                             <input type="text" id="iN_${i}" oninput="sync()" placeholder="Cliente...">
                         </div>
                         <div class="grid-individual">
+                            <div><label>RFC:</label><input type="text" id="iRFC_${i}" oninput="sync()" placeholder="N/A"></div>
+                            <div><label>Asesor:</label><input type="text" id="iAsesor_${i}" oninput="sync()" placeholder="N/A"></div>
+                        </div>
+                        <div class="grid-individual">
                             <div>
                                 <label>Monto $:</label>
                                 <input type="number" id="iM_${i}" step="0.01" oninput="convertirMontoIndividual(${i}); sync();">
                             </div>
-                            <div style="grid-column: span 2;">
+                            <div>
                                 <label>Cantidad con Letra (Auto):</label>
                                 <input type="text" id="iL_${i}" oninput="sync()">
                             </div>
@@ -323,8 +332,8 @@
                         <tr><td class="label">Forma de pago:</td><td><span class="valor">De contado</span></td></tr>
                         <tr><td class="label">Fecha:</td><td><span class="valor oF"></span></td></tr>
                         <tr><td class="label">Nombre:</td><td><span class="valor oN"></span></td></tr>
-                        <tr><td class="label">RFC del Cliente:</td><td><span class="valor">N/A</span></td></tr>
-                        <tr><td class="label">Asesor Comercial:</td><td><span class="valor">N/A</span></td></tr>
+                        <tr><td class="label">RFC del Cliente:</td><td><span class="valor oRFC">N/A</span></td></tr>
+                        <tr><td class="label">Asesor Comercial:</td><td><span class="valor oAsesor">N/A</span></td></tr>
                         <tr><td class="label">Se recibe la cantidad de:</td><td><span class="valor"><span class="oM"></span> (MXN)</span></td></tr>
                         <tr><td class="label">Por concepto de:</td><td><span class="valor oC"></span></td></tr>
                         <tr><td class="label">Cantidad con letra:</td><td><span class="valor oL"></span></td></tr>
@@ -352,12 +361,16 @@
         if (!esIndividual || cant === 1) {
             // MODO GLOBAL
             const n = document.getElementById('iN_Global').value;
+            const rfc = document.getElementById('iRFC_Global').value;
+            const asesor = document.getElementById('iAsesor_Global').value;
             const m = document.getElementById('iM_Global').value;
             const l = document.getElementById('iL_Global').value;
             const c = document.getElementById('iC_Global').value;
 
             for(let i=0; i < recibos.length; i++) {
                 recibos[i].querySelector('.oN').innerText = n;
+                recibos[i].querySelector('.oRFC').innerText = rfc || "N/A"; // Default N/A
+                recibos[i].querySelector('.oAsesor').innerText = asesor || "N/A"; // Default N/A
                 recibos[i].querySelector('.oM').innerText = m;
                 recibos[i].querySelector('.oL').innerText = l;
                 recibos[i].querySelector('.oC').innerText = c;
@@ -366,11 +379,15 @@
             // MODO INDIVIDUAL
             for(let i=0; i < recibos.length; i++) {
                 const in_cl = document.getElementById('iN_' + i);
+                const iRFC = document.getElementById('iRFC_' + i);
+                const iAsesor = document.getElementById('iAsesor_' + i);
                 const im = document.getElementById('iM_' + i);
                 const il = document.getElementById('iL_' + i);
                 const ic = document.getElementById('iC_' + i);
                 
                 if(in_cl) recibos[i].querySelector('.oN').innerText = in_cl.value;
+                if(iRFC) recibos[i].querySelector('.oRFC').innerText = iRFC.value || "N/A";
+                if(iAsesor) recibos[i].querySelector('.oAsesor').innerText = iAsesor.value || "N/A";
                 if(im) recibos[i].querySelector('.oM').innerText = im.value;
                 if(il) recibos[i].querySelector('.oL').innerText = il.value;
                 if(ic) recibos[i].querySelector('.oC').innerText = ic.value;
