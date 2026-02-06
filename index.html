@@ -50,7 +50,7 @@
         /* Contenedor de Opciones Avanzadas */
         #seccion-avanzada {
             margin-top: 20px; background: #f8f9fa; padding: 20px; 
-            border-radius: 8px; border: 1px solid #e0e0e0; display: none; /* Oculto por defecto */
+            border-radius: 8px; border: 1px solid #e0e0e0; display: none; /* OCULTO POR DEFECTO */
         }
 
         #print-area { display: flex; flex-direction: column; align-items: center; }
@@ -96,7 +96,7 @@
 
 <div id="ui-panel">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 style="margin:0;">Generador NRG - v5.0</h3>
+        <h3 style="margin:0;">Generador NRG - v5.1 Final</h3>
     </div>
 
     <div class="input-row">
@@ -124,7 +124,7 @@
         </div>
     </div>
     
-    <div id="seccion-avanzada">
+    <div id="seccion-avanzada" style="display: none;">
         <div style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
             <div class="check-container" onclick="document.getElementById('checkIndividual').click()">
                 <input type="checkbox" id="checkIndividual" onchange="actualizarInterfazIndividual()">
@@ -136,13 +136,13 @@
 
     <div id="inputs-globales">
         <div class="input-row">
-            <div style="grid-column: span 3;"><label>Nombre Cliente:</label><input type="text" id="iN_Global" oninput="sync()"></div>
+            <div style="grid-column: span 3;"><label>Nombre Cliente (Global):</label><input type="text" id="iN_Global" oninput="sync()"></div>
         </div>
         <div class="input-row">
-            <div><label>Monto $:</label><input type="number" id="iM_Global" step="0.01" oninput="convertirMontoGlobal(); sync();"></div>
+            <div><label>Monto $ (Global):</label><input type="number" id="iM_Global" step="0.01" oninput="convertirMontoGlobal(); sync();"></div>
             <div style="grid-column: span 2;"><label>Cantidad con Letra:</label><input type="text" id="iL_Global" oninput="sync()"></div>
         </div>
-        <div><label>Concepto:</label><textarea id="iC_Global" oninput="sync()" style="height: 50px;"></textarea></div>
+        <div><label>Concepto (Global):</label><textarea id="iC_Global" oninput="sync()" style="height: 50px;"></textarea></div>
     </div>
 
     <button class="btn-print" onclick="window.print()">IMPRIMIR RECIBOS</button>
@@ -152,7 +152,6 @@
 
 <script>
     // --- CONFIGURACIÓN DE IMÁGENES ---
-    // Usamos .png para montajes porque así está en tu GitHub
     const logos = {
         solar: 'solar.png',       
         ing: 'ingenieria.png',    
@@ -172,19 +171,20 @@
         const checkIndividual = document.getElementById('checkIndividual');
 
         if (cant === 1) {
-            // Si es 1 copia, ocultamos la opción de datos diferentes
+            // FUERZA BRUTA: Si es 1, ocultar la caja avanzada y desmarcar el check
             seccionAvanzada.style.display = 'none';
-            checkIndividual.checked = false; // Desactivar modo individual
+            checkIndividual.checked = false; 
         } else {
-            // Si son más, mostramos la opción
+            // Si son más de 1, mostrar la caja avanzada
             seccionAvanzada.style.display = 'block';
         }
-        actualizarInterfazIndividual(); // Re-calcular inputs
+        // Actualizar la interfaz para reflejar si está marcado o no (o forzado a no estarlo)
+        actualizarInterfazIndividual(); 
     }
 
     // --- LÓGICA DE FECHA (Check) ---
     function toggleFechaHoy(e) {
-        if(e) e.stopPropagation(); // Evitar doble click
+        if(e) e.stopPropagation(); 
         const check = document.getElementById('checkFecha');
         const inputFecha = document.getElementById('iF');
         
@@ -193,7 +193,7 @@
             const hoy = new Date();
             const texto = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
             inputFecha.value = texto;
-            inputFecha.disabled = true; // Bloquear para que no editen
+            inputFecha.disabled = true; 
         } else {
             inputFecha.value = "";
             inputFecha.disabled = false;
@@ -210,9 +210,9 @@
         
         contenedor.innerHTML = ''; 
 
+        // Solo activar modo individual si el check está marcado Y hay más de 1 copia
         if (esIndividual && cant > 1) {
-            // MODO INDIVIDUAL ACTIVADO
-            globales.style.display = 'none'; // Ocultar los inputs grandes
+            globales.style.display = 'none'; // Ocultar global
             
             for (let i = 0; i < cant; i++) {
                 contenedor.innerHTML += `
@@ -227,7 +227,7 @@
                                 <label>Monto $:</label>
                                 <input type="number" id="iM_${i}" step="0.01" oninput="convertirMontoIndividual(${i}); sync();">
                             </div>
-                            <div>
+                            <div style="grid-column: span 2;">
                                 <label>Cantidad con Letra (Auto):</label>
                                 <input type="text" id="iL_${i}" oninput="sync()">
                             </div>
@@ -240,8 +240,8 @@
                 `;
             }
         } else {
-            // MODO GLOBAL (O 1 sola copia)
-            globales.style.display = 'block'; // Mostrar inputs grandes
+            // MODO GLOBAL (1 copia o checkbox desmarcado)
+            globales.style.display = 'block'; 
         }
         renderRecibos(); 
     }
